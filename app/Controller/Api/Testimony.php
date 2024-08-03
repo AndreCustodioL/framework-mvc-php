@@ -3,6 +3,7 @@
 namespace App\Controller\Api;
 
 use \App\Model\Entity\Testimony as EntityTestimony;
+use Exception;
 use \WilliamCosta\DatabaseManager\Pagination;
 
 class Testimony extends Api{
@@ -35,7 +36,7 @@ class Testimony extends Api{
 
         //RENDERIZA O ITEM
         while($obTestimony = $results->fetchObject(EntityTestimony::class)){
-            //VIEW DE DEPOIMENTOS
+            //DEPOIMENTOS
             $itens[] = [
                 'id' => (int)$obTestimony ->id,
                 'nome' => $obTestimony ->nome,
@@ -90,6 +91,99 @@ class Testimony extends Api{
             'nome' => $obTestimony ->nome,
             'mensagem' => $obTestimony->mensagem,
             'data' => $obTestimony->data
+        ];
+    }
+    
+    /**
+     * Método responsável por cadastrar um novo depoimento
+     *
+     * @param  Request $request
+     * @return array
+     */
+    public static function setNewTestimony($request){
+        //POST VARS
+        $postVars = $request->getPostVars();
+
+        //VALIDA OS CAMPOS OBRIGATÓRIOS
+        if(!isset($postVars['nome']) or !isset($postVars['mensagem'])){
+            throw new Exception("Os campos 'nome' e 'mensagem' são obrigatórios",400);
+        }
+
+        //NOVO DEPOIMENTO
+        $obTestimony = new EntityTestimony;
+        $obTestimony->nome = $postVars['nome'];
+        $obTestimony->mensagem = $postVars['mensagem'];
+        $obTestimony->cadastrar();
+
+        //RETORNA OS DETALHES DO DEPOIMENTO CADASTRADO
+        return [
+            'id' => (int)$obTestimony ->id,
+            'nome' => $obTestimony ->nome,
+            'mensagem' => $obTestimony->mensagem,
+            'data' => $obTestimony->data
+        ];
+    }
+    
+    /**
+     * Método responsável por atualizar um depoimento
+     *
+     * @param  Request $request
+     * @param  int $int
+     * @return array
+     */
+    public static function setEditTestimony($request,$id){
+        //POST VARS
+        $postVars = $request->getPostVars();
+
+        //VALIDA OS CAMPOS OBRIGATÓRIOS
+        if(!isset($postVars['nome']) or !isset($postVars['mensagem'])){
+            throw new Exception("Os campos 'nome' e 'mensagem' são obrigatórios",400);
+        }
+
+        //BUSCA O DEPOIMENTO NO BANCO
+        $obTestimony = EntityTestimony::getTestimonyByid($id);
+
+        //VALIDA A INSTANCIA
+        if(!$obTestimony instanceof EntityTestimony) {
+            throw new \Exception("O Depoimento ".$id." Não foi encontrado",404);
+        }
+
+        //ATUALIZA O DEPOIMENTO
+        $obTestimony->nome = $postVars['nome'];
+        $obTestimony->mensagem = $postVars['mensagem'];
+        $obTestimony->atualizar();
+
+        //RETORNA OS DETALHES DO DEPOIMENTO ATUALIZADO
+        return [
+            'id' => (int)$obTestimony ->id,
+            'nome' => $obTestimony ->nome,
+            'mensagem' => $obTestimony->mensagem,
+            'data' => $obTestimony->data
+        ];
+    }
+    
+    /**
+     * Método responsável por excluir um depoimento
+     *
+     * @param  Request $request
+     * @param  int $int
+     * @return array
+     */
+    public static function setDeleteTestimony($request,$id){
+        //BUSCA O DEPOIMENTO NO BANCO
+        $obTestimony = EntityTestimony::getTestimonyByid($id);
+
+        //VALIDA A INSTANCIA
+        if(!$obTestimony instanceof EntityTestimony) {
+            throw new \Exception("O Depoimento ".$id." Não foi encontrado",404);
+        }
+
+        //EXCLUI O DEPOIMENTO
+        $obTestimony->excluir();
+
+        //RETORNA O SUCESSO DA EXCLUSAO
+        return [
+            'sucesso' => 'true'
         ];
     }
 
